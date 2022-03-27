@@ -1,0 +1,341 @@
+---
+layout: page
+title: Proximity between jobs
+subtitle: Document similarity to get job similar to each other + force directed graph in D3 for vizualisation.
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="../css/prism.css">
+<script src="../js/prism.js"></script>
+</head>
+<body>
+<h3> Objectives </h3>	
+<p> The goal of this post is to find jobs that are similar to each others, 
+	using public data only, mainly focused on tasks required for each jobs. </p>
+	<h3> Data </h3>
+	<p> We used data available on INSEE (French governemental agencies for statistics)  website. 
+	You can find data about ROME at the following link <a href="https://public.opendatasoft.com/explore/dataset/pole-emploi-rome-arborescence-principale/export/?flg=fr">data for each type of job.</a>
+	We can find the following informations:
+		<ul>
+			<li>CODE ROME: it's an ID (one letter followed by four numbers) used in France to classify jobs.</li>
+			<li>Libellé ROME: which is just the name of the job.</li>
+			<li>Tasks related to ROME: we found another dataset to link task to related job (by CODE ROME).</li>
+		</ul>
+	</p>
+	<h3>Method </h3>
+<p>
+  Document similarity is mainly computed using description of tasks related to job. 
+	Therefor, when two jobs require similar skill sets and tasks, they will be close.</br>
+The main steps are the following:
+<ol>
+	<li>Stop words removal using a dictionnary</li>
+	<li>Stemming of words</li>
+	<li>Creation of a TF-IDF matrix</li>
+	<li>Computation of a cosine similarity between documents (using TF-IDF matrix as input)</li>
+</ol>
+</p>
+  <p> For the final visualization, I reduced the number of job available (health sector only) but for a complete application, 
+    I should probably introduce a new widget to allow user to filter depending on what he want to see. </p>
+<figure>
+	<figcaption>Library & constant definition</figcaption>
+  <pre>
+    <code class="language-python">
+# -*- coding: utf-8 -*-
+import pandas as pd
+from nltk.stem import SnowballStemmer
+from sklearn.base import BaseEstimator, TransformerMixin, ClassifierMixin
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import Pipeline
+import networkx as nx
+from networkx.readwrite import json_graph
+import json
+import scipy
+import numpy as np
+
+PATH = "U:/D3.Js/Metiers_competences/"
+PATH_DATA = PATH + "Data/"
+PATH_PLOT = PATH + 'Plot/'
+RANDOM_STATE = 42
+THRESHOLD = 0.2
+
+stop_words =\
+    list(pd.read_csv(PATH_DATA + "stop_word.txt", header=None).iloc[:, 0])
+stemmer = SnowballStemmer("french", ignore_stopwords=False)
+
+    </code>
+  </pre>
+</figure>
+	
+	<p> Here we define function and custom transformers and estimators. </p>
+	
+<figure>
+  <figcaption>Function & class definition</figcaption>
+  <pre>
+    <code class="language-python">
+
+def create_data_set(url_def, url_job, grand_domaine="INDUSTRIE"):
+    definitions =\
+        pd.read_csv(url_def,
+                    sep=";")
+    definitions =\
+        definitions.loc[definitions.loc[:, "Grand Domaine"] == grand_domaine, :]
+    definitions = definitions.sort_values(by="Libellé")
+    definitions =\
+        definitions.loc[:, ["Libellé", "code_rome"]].drop_duplicates()
+    jobs =\
+        pd.read_csv(url_job,
+                    sep=";").rename(columns={"Code ROME":"code_rome"})
+    jobs = jobs.loc[:, ["code_rome", "ROME Libellé"]].drop_duplicates()
+        
+    data = definitions.merge(jobs, how="left", on="code_rome")
+    data.columns = ["jobname", "code_rome", "definition"]
+    return(data)
+
+class CleanText(BaseEstimator, TransformerMixin):
+    """ Apply stemming in text column
+    
+    Parameters
+    ----
+    text_col: list of columns to apply stop_word deletion
+    stemmer: Stelmer t ouse (from nltk)
+    
+    Attributes
+    ----
+    Return pandas dataframe with transformed text column:
+        - stop word are deleted
+        - stemming is applied
+        - every word are converted to lowercase
+    
+    """
+    def __init__(self, text_col=None, stemmer=None, stop_word=None):
+        self.stemmer = stemmer
+        self.text_col = text_col
+        self.stop_word = stop_word
+    def __clean_text__(self, x):
+        return((' '.join(self.stemmer.stem(w.lower()) for w in x.split() 
+            if w.lower() not in self.stop_word)))
+    def fit(self, df, y=None, **fit_params):
+        return self
+    def transform(self, df, **transform_params):
+        for col in self.text_col:
+            df.loc[:, col] = df.loc[:, col].map(self.__clean_text__)
+        return df
+    
+    
+class CosineSimilarity(BaseEstimator, ClassifierMixin):  
+    """Estimator for cosine similarity Input is tf-idf matrix"""
+    def __init__(self, otherParam=None):
+        self.otherParam = otherParam
+    def fit(self, X, y=None):
+        return self
+    def predict(self, X, y=None):
+        return((X * X.T))
+        
+class keeped_variable(BaseEstimator, TransformerMixin):
+    """Indicate variable to keep in dataset.
+    To check that training and test set contain same variables
+    """
+    def __init__(self, variable_to_keep):
+        self.variable_to_keep=variable_to_keep
+    def transform(self, X):
+        result=X[self.variable_to_keep]
+        return result
+    def fit(self, X, y=None):
+        return self
+    
+class PandasToSeries(BaseEstimator, TransformerMixin):
+    """ Transform a pandas.DataFrame to a numpy.array """
+    def __init__(self, col_tokeep):
+        self.col_tokeep = col_tokeep
+    def fit(self, df, y=None):
+        return self
+    def transform(self, df, **transform_params):
+        return df.loc[:, self.col_tokeep]
+    </code>
+  </pre>
+</figure>
+  
+  <p> We can see that everything is in a custom transformer to be introduced in a scikit-learn Pipeline.
+    I think it's a really good way to have clean code and to reuse snipset of code in many projects. </p>
+  <p> Again, it's just a sample of job for demonstration purpose. We kept only job related to health sector 
+	  for the visualization. </p>
+  
+ <figure>
+  <figcaption>Main code</figcaption>
+  <pre>
+    <code class="language-python">
+
+if __name__== "__main__":
+    ############################"
+    #    DOCUMENT SIMILARITY
+    ############################"
+    data = create_data_set(PATH_DATA + "pole-emploi-rome-arborescence-principale.csv",
+                           PATH_DATA + "rome-code-rome-definitions.csv",
+                           "SANTE")
+    data = data.groupby('jobname')['definition'].apply(lambda x: ' '.join(x))\
+               .reset_index()
+    clean_text = CleanText(["definition"], stemmer, stop_words)
+    
+    pipe = Pipeline([
+            ("clean_text", clean_text),
+            ("select_variable", keeped_variable(["definition"])),
+            ("to_numpy", PandasToSeries("definition")),
+            ("tf_idf", TfidfVectorizer(max_df=0.9, min_df=0.1)),
+            ("cosine", CosineSimilarity())
+            ])
+    pipe.fit(data)
+    pca_res = pipe.predict(data)
+    
+    ############################"
+    #    CREATE GRAPH
+    ############################"
+    cx = scipy.sparse.coo_matrix(pca_res)
+
+    G=nx.Graph()
+
+    for job_number, job in enumerate(data.jobname):
+        G.add_node(job_number)
+        G.node[job_number]['label'] = job
+    
+    for i,j,v in zip(cx.row, cx.col, cx.data):
+        if v > THRESHOLD:
+            if i != j:
+                G.add_edge(np.asscalar(i), np.asscalar(j))
+                G[np.asscalar(i)][np.asscalar(j)]['strength'] = v
+            
+    pos = nx.spring_layout(G)
+        
+    graph = json_graph.node_link_data(G)
+    with open(PATH_PLOT + 'graph.json', 'w') as f:
+        json.dump(graph, f, indent=4)
+    </code>
+  </pre>
+</figure>
+  
+  <h3> Final Result </h3>
+  
+ <p> And here is the final result ! You can see that jobs are filtered so that we can represent it in a force directed graph.
+  The strength of the similarity is given by edge's size. 
+   Here we just show a link if the proximity is above a a fixed threshold.
+</p>
+	
+	<h3> Result for Health-related jobs </h3>
+<p>Please use scrolling to see the visualization in full. </p>
+<style>
+
+.link {
+  stroke: #777;
+  stroke-opacity: 0.5;
+  stroke-width: 1.5px;
+}
+
+.node circle {
+  fill: #ccc;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  display: none;
+  font: 10px sans-serif;
+}
+
+.node:hover circle {
+  fill: #000;
+}
+
+.node:hover text {
+  display: inline;
+}
+
+.cell {
+  fill: none;
+  pointer-events: all;
+}
+
+</style>
+  
+<script src="https://d3js.org/d3.v3.min.js"></script>
+	
+<script>
+
+var width = 1920,
+    height = 1000
+	
+// var width = 960,
+//    height = 500
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var force = d3.layout.force()
+    .gravity(0.1)
+    .charge(-120)
+    .linkDistance(70) // 100
+    .size([width, height]);
+
+var voronoi = d3.geom.voronoi()
+    .x(function(d) { return d.x; })
+    .y(function(d) { return d.y; })
+    .clipExtent([[0, 0], [width, height]]);
+
+d3.json("https://raw.githubusercontent.com/thibaultbl/thibaultbl.github.io/master/img/graph.json", function(error, json) {
+  if (error) throw error;
+
+  force
+      .nodes(json.nodes)
+      .links(json.links)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(json.links)
+      .enter().append("line")
+      .attr("class", "link")
+      .style("stroke-width", function (d) {
+			                           return (d.strength * 4);});
+
+  var node = svg.selectAll(".node")
+      .data(json.nodes)
+      .enter().append("g")
+      .attr("class", "node")
+      .call(force.drag);
+
+  var circle = node.append("circle")
+      .attr("r", 4.5);
+
+  var label = node.append("text")
+      .attr("dy", ".35em")
+      .text(function(d) { return d.label; });
+
+  var cell = node.append("path")
+      .attr("class", "cell");
+
+  force.on("tick", function() {
+    cell
+        .data(voronoi(json.nodes))
+        .attr("d", function(d) { return d.length ? "M" + d.join("L") : null; });
+
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    circle
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+
+    label
+        .attr("x", function(d) { return d.x + 8; })
+        .attr("y", function(d) { return d.y; });
+  });
+
+});
+
+</script>
+</body>
+</html>

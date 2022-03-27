@@ -1,0 +1,132 @@
+---
+layout: page
+title: Shared Garden in Paris.
+subtitle: Here you can find the location and type of shared garden in Paris (Using leaflet library).
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>leaflet-map-simple</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+
+  <!-- Load Leaflet: instructions at http://leafletjs.com/download.html -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css"
+  integrity="sha384-Zh+y1U8o6/7ni8Mp8szvUfZjGeKKS10CGH3IlD6L1X+XwzYgQ1llOjw/Wslc0cma"
+  crossorigin="anonymous">
+  <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"
+  integrity="sha384-6rCYjRgWDEI2RlZxiVihj1WIZB/uvFiRCGpavTVgFrSPDL0Bk1AiqCW+mmv5h0LP"
+  crossorigin="anonymous"></script>
+  <!-- Load Omnivore plugin to convert CSV to GeoJSON format -->
+  <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"></script>
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <!-- Position the map and title with Cascading Style Sheet (.css) -->
+  <style>
+    body { margin:0; padding:0; }
+    #map { position: absolute; top:0; bottom:0; right:0; left:0; }
+    #map-title { position: relative; margin-top: 10px; margin-left: 50px; float: left; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 6px 8px; font-family: Helvetica; font-weight: bold; font-size: 24px; z-index: 800; }
+    .container {height=300px;}	  
+  </style>
+</head>
+<body onload="initialize()">
+    <div id="map" style="width:100%;"></div>
+</body>
+
+  <!-- Create the map content with JavaScript (.js) -->
+  <script type="text/javascript">
+	function initialize() {
+		
+		var map = L.map('map', {
+			maxBoundsViscosity : 0,
+			maxBounds:[ [48, 2], [49.5, 3] ],
+			minZoom: 1
+		}).setView([48.903, 2.333], 11);
+		
+		/*
+		var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+			maxZoom: 18,
+		});
+	
+		map.addLayer(osmLayer);*/
+		
+		var light = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+    			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+  		}).addTo(map);
+	
+		var icon_size = [18, 25]
+		var greenIcon = L.icon({
+			iconUrl: 'https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-green.png',
+			
+			iconSize: icon_size, // size of the icon
+		});
+		
+		var redIcon = L.icon({
+			iconUrl: 'https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-red.png',
+			
+			iconSize: icon_size, // size of the icon
+		});
+		
+		var orangeIcon = L.icon({
+			iconUrl: 'https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-orange.png',
+			
+			iconSize: icon_size, // size of the icon
+		});
+		
+		var brownIcon = L.icon({
+			iconUrl: 'https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-brown.png',
+			
+			iconSize: icon_size, // size of the icon
+		});
+		
+		var purpleIcon = L.icon({
+			iconUrl: 'https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-purple.png',
+			
+			iconSize: icon_size, // size of the icon
+		});
+			
+		d3.dsv(";")("https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/liste_des_jardins_partages_a_paris.csv", function(data) {
+			data.forEach(function(d) {
+				
+				var icon_marker = greenIcon;	
+				var title_marker = "test";
+				if (d.type_jard === decodeURIComponent('Jardin%20p%C3%A9dagogique')) {
+					icon_marker = greenIcon;
+				} else if(d.type_jard.trim() === decodeURIComponent(('Jardin%20partag%C3%A9'))) {
+					icon_marker = redIcon;
+				} else if(d.type_jard.trim() === decodeURIComponent(('Jardin%20potag%C3%A9'))) {
+					icon_marker = brownIcon;
+				}
+				else{
+					icon_marker = orangeIcon;
+				}
+				
+				var config = {
+						title: title_marker,
+						icon: icon_marker
+						}
+				
+				L.marker(d.geo_point_2d.split(","), config).addTo(map)
+					.bindPopup('Adresse : ' + d.adresse);
+				});
+		});
+		
+		var legend = L.control({position: 'topright'});
+		legend.onAdd = function (map) {
+			var div = L.DomUtil.create('div', 'legend');
+			div.innerHTML +=  '<img src="https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-green.png">' + decodeURIComponent('Jardin%20p%C3%A9dagogique') + '<br>'
+			div.innerHTML +=  '<img src="https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-red.png">'+ decodeURIComponent(('Jardin%20partag%C3%A9')) + '<br>'
+			div.innerHTML +=  '<img src="https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-brown.png">'   +  decodeURIComponent(('Jardin%20potag%C3%A9')) + '<br>'
+			div.innerHTML +=  '<img src="https://raw.githubusercontent.com/thibaultbl/Jardin_partages_paris/master/leaf-orange.png">'   +  decodeURIComponent(('Autre%20jardin')) + '<br>'
+			return div;
+		};
+	legend.addTo(map);
+	d3.selectAll(".col-lg-8.col-lg-offset-2.col-md-10.col-md-offset-1").style("height", "600px")
+	}
+</script>
+</html>

@@ -1,0 +1,189 @@
+---
+layout: page
+title: Organic food production and distribution !
+subtitle: One of my first project using D3. Not much time spent on the CSS part, so it's not really nice for now.
+use-site-title: true
+---
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Page Template</title>
+		<script src="https://d3js.org/d3.v3.min.js"></script>
+    </head>
+    <body>  
+	    <p> This is my first project using D3.js. I found several dataset related to the organic distribution, production, 
+		importation and transformation that I used to create the following map.
+		I learnt to merge several file using javascript and to produce an interactive datavisualization.
+	    </br>
+		Like you can see, I didn't spend much time on the CSS part, because I wanted to concentrate on the javascript.
+	    </p>
+		
+	    <div class="parameter_container">
+		<form class="parameters_organic">
+			<input type="radio" name="group-stack" value="Producteurs"  id="r1" onclick="update_on_change()" checked>
+			<label for="r1"><span></span>Producteurs</label>
+			<p>
+			<input type="radio" name="group-stack" value="Importateurs" id="r2" onclick="update_on_change()">
+			<label for="r2"><span></span>Importateurs</label>
+			<p>
+			<input type="radio" name="group-stack" value="Distributeurs" id="r3" onclick="update_on_change()">
+			<label for="r3"><span></span>Distributeurs</label>
+			<p>
+			<input type="radio" name="group-stack" value="Preparateurs" id="r4" onclick="update_on_change()">
+			<label for="r4"><span></span>Preparateurs</label>
+			<p>
+		</form>
+		
+		<div class='map-overlay-inner parameters_organic' >
+			<input id='slider' type='range' name="slide" min='2008' 
+			       max='2011' step='1' value='2008' onchange="update_on_change()"
+			       style="height:19px;width:25%;"/>
+			<input type="text" id="textInput" value="" style="text-align:center;font-weight:bold;border:none;background:#FFFFFF;color:#000000;width=25%;">
+		</div>
+	    </div>
+	    
+	    <div id="division"></div>
+
+        <script type="text/javascript">
+		
+			var body=d3.select("#division");
+				
+			var svg=body.append("svg");
+			svg.attr({"width":"600px","height":"600px"});
+			var path = d3.geo.path();
+			
+			var color_scale;
+			var year;
+			var color_scale_import;
+			
+			var var_of_interest = d3.select('input[name="group-stack"]:checked').node().value;
+			update_viz(var_of_interest);
+			
+			function update_on_change(){
+				var_of_interest = d3.select('input[name="group-stack"]:checked').node().value;
+				update_viz(var_of_interest);
+			};
+
+			function handleMouseOver(d, i) {  // Add interactivity
+
+				// Use D3 to select element, change color and size
+				d3.select(this).attr({
+				  fill: "orange"
+				});
+				
+				var id_dep = d.properties.CODE_DEPT;
+				var csv_selected = d3.dsv(";", "utf-8")("https://raw.githubusercontent.com/thibaultbl/Filiere_bio_en_france/master/bio_producteurs_dep.csv", function(data) {
+					data = data.filter(function(row) {
+						return (("0" + row['id_departement']).slice(-2) == id_dep);
+					})
+					
+					var id_array = 0;
+					if (year == "2008")
+						id_array = 0;
+					else if (year == "2009")
+						id_array = 1;
+					else if (year == "2010")
+						id_array = 2;
+					else 
+						id_array = 3;
+					
+					svg.append("text").attr({
+						id: "t" + data.Annee + data.id_departement,  // Create an id for text so we can select it later for removing on mouseout
+						x: 30,
+						y: 80
+					})
+					.text(function() {
+						return data[id_array][var_of_interest].replace("s", 0) + " " + var_of_interest + " bio dans le département ";   // Value of the text
+					});
+				});			
+				
+				// Specify where to put label of text
+				svg.append("text").attr({
+				   id: "t" + d.properties.ID_GEOFLA,  // Create an id for text so we can select it later for removing on mouseout
+					x: 30,
+					y: 100
+				})
+				.text(function() {
+				  return d.properties.NOM_DEPT;  // Value of the text
+				});
+			}
+			
+			function handleMouseOut(d, i) {
+				// Use D3 to select element, change color back to normal
+				d3.select(this).attr({
+				  fill: color_scale(d.properties[var_of_interest])
+				});
+				
+				var id_dep = d.properties.CODE_DEPT;
+				var csv_selected = d3.dsv(";", "utf-8")("https://raw.githubusercontent.com/thibaultbl/Filiere_bio_en_france/master/bio_producteurs_dep.csv", function(data) {
+					data = data.filter(function(row) {
+						return (("0" + row['id_departement']).slice(-2) == id_dep) && (row["Annee"] == year);
+					})
+					
+					d3.select("#t" + data.Annee + data.id_departement).remove();  // Remove text location
+				});	
+				
+				// Select text by id and then remove
+				d3.select("#t" + d.properties.ID_GEOFLA).remove();  // Remove text location
+				//d3.select("#t" + d.properties.ID_GEOFLA + "prod").remove();  // Remove text location
+			}
+			
+			function updateTextInput(val) {
+				document.getElementById('textInput').value="Year: " + val; 
+			}
+			
+			function update_viz(variable){
+				year = document.getElementById('slider').value;
+				updateTextInput(year);
+
+				d3.dsv(";", "utf-8")("https://raw.githubusercontent.com/thibaultbl/Filiere_bio_en_france/master/bio_producteurs_dep.csv", function(data) {	
+				
+					data.forEach(function(d) {
+						d[variable] = d[variable].replace("s", 0);
+					});
+					
+					data = data.filter(function(row) {
+						return (row["Annee"] == year);
+					})
+				
+					var max = d3.max(data, function(d) { return +d[variable]; } );
+					var min = d3.min(data, function(d) { return +d[variable]; } );
+					
+					color_scale = d3.scale.linear().domain([0, max]).range(['#e0ffd8', 'green']);
+					
+					// Read JSON
+					var dep = d3.json("https://raw.githubusercontent.com/thibaultbl/Filiere_bio_en_france/master/departments.json", function(geoJSON) {
+						svg.selectAll("path").remove();
+				
+						var projection = d3.geo.conicConformal()
+							.center([2.454071, 46.279229])
+							.scale(3000)
+							.translate([300,300]);
+						path.projection(projection);			
+					
+						var map=svg.selectAll("path").data(geoJSON.features)
+						
+						geoJSON.features.forEach(function(d){
+							var result = data.filter(function(producteur){
+								return (producteur.id_departement === d.properties.CODE_DEPT);
+							});
+							d.properties[variable] = (result[0] !== undefined) ? result[0][variable] : null;
+						});	
+
+						map.enter()
+							.append("path")
+							.attr("stroke","black")
+							.attr("d", path)
+							.attr("fill", function(d){
+								return color_scale(d.properties[variable]);})
+							.on("mouseover", handleMouseOver)
+							.on("mouseout", handleMouseOut);
+						});
+				
+					return data;
+			});	
+			}
+        </script>
+    </body>
+</html>

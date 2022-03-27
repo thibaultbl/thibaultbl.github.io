@@ -1,0 +1,49 @@
+---
+layout: page
+title: Feature engineering for cyclical variable
+subtitle: How to engineer cyclical variable (hour, weekday, ...)
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="../css/prism.css">
+<script src="../js/prism.js"></script>
+</head>
+<body>
+<h3> The thing </h3>
+<p> Before anything else, this post is just my rewriting for memory and comprehension of the following amazing blogpost: <a href="http://blog.davidkaleko.com/feature-engineering-cyclical-features.html">http://blog.davidkaleko.com/feature-engineering-cyclical-features.html</a>. All credits go to this blogpost and his creator.</p>	
+<p> Usually, we handle feature like month and hour with dummy variable (11/12 for months and 23/24 for hours). It works, but it is far from perfect because 23h will be considered far away from 00h 
+when in reality those two hours should be as close as 00h and 01h. But lately, I found (on the internet, not by myself) a really good way to handle this type of cyclical features to take into account the cyclical property.  </p>
+<p>The solution is to map those cyclicals variable in a circle, computing the x and y component of the 2-dimension circle using cos and sin trigonometrics functions. It is very obvious for hours, because it will be similar to what can be found on an old-fashion clock.
+</p>
+
+<img src="\img\clock.png">
+
+<h3> In code </h3>	
+
+<p>
+<figure>
+	<figcaption>Library & constant definition</figcaption>
+  <pre>
+    <code class="language-python">
+    import numpy as np
+
+    # For hours
+    df['hr_sin'] = np.sin(df.hr*(2.*np.pi/24))
+    df['hr_cos'] = np.cos(df.hr*(2.*np.pi/24))
+
+    # For months
+    df['mnth_sin'] = np.sin((df.mnth-1)*(2.*np.pi/12))
+    df['mnth_cos'] = np.cos((df.mnth-1)*(2.*np.pi/12))
+    </code>
+  </pre>
+</figure>
+</p>
+
+<p>Note that in the previous code, we took month minus 1 to map values from 0 to 11 for convenience.
+</p>
+
+</body>
+</html>
