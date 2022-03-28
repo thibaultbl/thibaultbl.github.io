@@ -41,7 +41,65 @@ use-site-title: true
     marketing, accounting, finance, ...).
     For instance, a module should have to change only if accounting change the way they are calculating some value of
     interest, but should never change if marketing change any of their process.
+
+    <i>This principle is about people.</i>
   </p>
+
+  <h3> Code example </h3>
+
+  <code class="language-python">
+    from dataclasses import dataclass
+    from typing import Dict
+
+
+    # Bad implementation
+    @dataclass
+    class MarketingCampaignResult:
+        number_of_publicity: int
+        number_of_buy: int
+
+        def get_cost(self) -> int:
+            return self.number_of_publicity * 99
+
+        # Will be used by finance
+        def get_cost_detail(self) -> Dict[str, int]:
+            total_cost = self.get_cost()
+            cost_detail = {"creation": total_cost * 0.25, "facebook": 0.25, "google": 0.3, "human_ressource": 0.2}
+            return cost_detail
+
+        # Will be used by marketing
+        def get_efficiency(self) -> float:
+            return self.number_of_publicity / self.number_of_buy
+
+
+    # Good implementation - Separation in two modules
+
+
+    # Will be used by finance
+    @dataclass
+    class MarketingCampaignCost:
+        number_of_publicity: int
+
+        def get_cost(self) -> int:
+            return self.number_of_publicity * 99
+
+        def get_cost_detail(self) -> Dict[str, int]:
+            total_cost = self.get_cost()
+            cost_detail = {"creation": total_cost * 0.25, "facebook": 0.25, "google": 0.3, "human_ressource": 0.2}
+            return cost_detail
+
+
+    # Will be used by Marketing
+    @dataclass
+    class MarketingCampaignEfficiency:
+        number_of_buy: int
+        number_of_publicity: int
+
+        def get_efficiency(self) -> float:
+            return self.number_of_publicity / self.number_of_buy
+
+
+  </code>
 
 
 
