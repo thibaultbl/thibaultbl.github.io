@@ -47,9 +47,16 @@ use-site-title: true
 
   <h3> Code example </h3>
 
+  In the example below, we start with an implementation of a module used to compute the result of a marketing campaign.
+
+  The problem is that
+
   <code class="language-python">
     from dataclasses import dataclass
     from typing import Dict
+
+    import pandas as pd
+    from tabulate import tabulate
 
 
     # Bad implementation
@@ -58,19 +65,28 @@ use-site-title: true
         number_of_publicity: int
         number_of_buy: int
 
-        def get_cost(self) -> int:
+        def total_cost(self) -> int:
             return self.number_of_publicity * 99
 
-        # Will be used by finance
+        # Will be used to compute the content of the report - used by finance
         def get_cost_detail(self) -> Dict[str, int]:
-            total_cost = self.get_cost()
-            cost_detail = {"creation": total_cost * 0.25, "facebook": 0.25, "google": 0.3, "human_ressource": 0.2}
+            total_cost = self.total_cost()
+            cost_detail = {
+                "creation": [total_cost * 0.25],
+                "provider": [total_cost * 0.55],
+                "human_ressource": [total_cost * 0.2]
+            }
             return cost_detail
 
-        # Will be used by marketing
-        def get_efficiency(self) -> float:
-            return self.number_of_publicity / self.number_of_buy
+        # Will be used to display the report - used by marketing
+        def display_report(self) -> float:
+            df = pd.DataFrame.from_dict(self.get_cost_detail())
 
+            print(tabulate(df, headers='keys', tablefmt='psql'))
+
+
+    marketing_report = MarketingCampaignResult(5, 3)
+    marketing_report.display_report()
 
     # Good implementation - Separation in two modules
 
@@ -79,24 +95,37 @@ use-site-title: true
     @dataclass
     class MarketingCampaignCost:
         number_of_publicity: int
+        number_of_buy: int
 
-        def get_cost(self) -> int:
+        def total_cost(self) -> int:
             return self.number_of_publicity * 99
 
         def get_cost_detail(self) -> Dict[str, int]:
-            total_cost = self.get_cost()
-            cost_detail = {"creation": total_cost * 0.25, "facebook": 0.25, "google": 0.3, "human_ressource": 0.2}
+            total_cost = self.total_cost()
+            cost_detail = {
+                "creation": [total_cost * 0.25],
+                "provider": [total_cost * 0.55],
+                "human_ressource": [total_cost * 0.2]
+            }
             return cost_detail
 
 
     # Will be used by Marketing
     @dataclass
     class MarketingCampaignEfficiency:
-        number_of_buy: int
-        number_of_publicity: int
+        cost_detail: Dict
 
-        def get_efficiency(self) -> float:
-            return self.number_of_publicity / self.number_of_buy
+        def display_report(self) -> float:
+            df = pd.DataFrame.from_dict(self.cost_detail)
+
+            print(tabulate(df, headers='keys', tablefmt='psql'))
+
+
+    marketing_cost = MarketingCampaignCost(5, 3)
+    cost_detail = marketing_cost.get_cost_detail()
+
+    marketing_report = MarketingCampaignEfficiency(cost_detail)
+    marketing_report.display_report()
 
 
   </code>
