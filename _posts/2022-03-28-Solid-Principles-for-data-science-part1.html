@@ -1,0 +1,54 @@
+---
+layout: page
+title: SOLID principles for data science
+subtitle: Part 1: Single-Responsibility Principle
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="../css/prism.css">
+  <script src="../js/prism.js"></script>
+</head>
+
+<body>
+  <h3> The three basics </h3>
+  <p>In this post, I would like to get back really quickly to three basics of data science for projects that are built
+    for production:
+  </p>
+  <ul>
+    <li>Logging</li>
+    <li>Configuration file</li>
+    <li>Unit Test</li>
+  </ul>
+
+  <h3> Logging </h3>
+
+  <p>
+    Data Scientist use a lot of print statement when building a project, but there is a better way : logging. I use
+    logging a lot to keep track of a project run state and to debug trouble in a project execution. I use mainly the
+    logging module, but I am sure there is many other way to log the execution of a python project.
+  </p>
+
+  <h3> Configuration file </h3>
+
+  <p>
+    Every element that is subject to regular change but is not really code should be put in a configuration file. It
+    allow the developer and every technical user of the project to bring change to the project without changing the
+    code. I personally use dynaconf a lot, but again I am sure that there is many other python package.
+  </p>
+
+  <h3> Unit test </h3>
+
+  <p>
+    For every project that is built to be run in production for a long time and that should be improved regularly, it is
+    really important to build unit test to allow quick change in the code of the project. I personally use pytest a lot,
+    but ....
+  </p>
+
+
+</body>
+
+</html>
