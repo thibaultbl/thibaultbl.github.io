@@ -47,6 +47,7 @@ use-site-title: true
 
   <h3> Code example </h3>
 
+  <pre>
   <code class="language-python">
     from dataclasses import dataclass
     from typing import Dict
@@ -85,6 +86,7 @@ use-site-title: true
     marketing_report = MarketingCampaignResult(5, 3)
     marketing_report.display_report()
   </code>
+</pre>
 
   In the previous implementation, the module mix the way the values of the report are computed, which is a
   responsability that can be attributed for example to finance or accounting and the way the report is presented, which
@@ -92,7 +94,7 @@ use-site-title: true
 
   A good implementation would be to separate the two "responsability" in different module.
 
-
+  <pre>
   <code class="language-python">
 
 # Good implementation - Separation in two modules
@@ -137,6 +139,7 @@ marketing_report.display_report()
 
 
   </code>
+</pre>
 
   <h3> References </h3>
 
