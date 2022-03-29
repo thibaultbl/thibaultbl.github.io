@@ -1,0 +1,156 @@
+---
+layout: page
+title: SOLID principles for data science
+subtitle: Part 1: Single-Responsibility Principle
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="../css/prism.css">
+  <script src="../js/prism.js"></script>
+</head>
+
+<body>
+  <h3> SOLID Principles </h3>
+  <p>SOLID are a set of 5 principles intended to help the developers produce maintenable, readable and flexible
+    code:
+
+  </p>
+  <ul>
+    <li>single-responsibility principle</li>
+    <li>open–closed principle</li>
+    <li>Liskov substitution principle</li>
+    <li>interface segregation principle:</li>
+    <li>dependency inversion principle</li>
+  </ul>
+
+  <h3> Single-Responsibility Principle </h3>
+
+  <p>
+    The main description of the SRP is often the following: "There should never be more than one reason for a class to
+    change." </br>
+    Depending on the person describing the principle the interpretation can be different.
+    It is often interpreted as "every class should have only one responsibility." which is a really broad definition
+    that can be difficult to apply in a real environment.
+
+    I personally prefer the definition given by "Clean Architecture" of Robert Martin. He say that a module should only
+    depend on a given group of person (in a typical company, a group of person may be given by occupations, like
+    marketing, accounting, finance, ...).
+    For instance, a module should have to change only if accounting change the way they are calculating some value of
+    interest, but should never change if marketing change any of their process.
+
+    <i>This principle is about people.</i>
+  </p>
+
+  <h3> Code example </h3>
+
+  <code class="language-python">
+    from dataclasses import dataclass
+    from typing import Dict
+
+    import pandas as pd
+    from tabulate import tabulate
+
+
+    # Bad implementation
+    @dataclass
+    class MarketingCampaignResult:
+        number_of_publicity: int
+        number_of_buy: int
+
+        def total_cost(self) -> int:
+            return self.number_of_publicity * 99
+
+        # Will be used to compute the content of the report - used by finance
+        def get_cost_detail(self) -> Dict[str, int]:
+            total_cost = self.total_cost()
+            cost_detail = {
+                "creation_cost": [total_cost * 0.25],
+                "provider_cost": [total_cost * 0.55],
+                "human_ressource_cost": [total_cost * 0.2]
+            }
+            return cost_detail
+
+        # Will be used to display the report - used by marketing
+        def display_report(self) -> float:
+            df = pd.DataFrame.from_dict(self.get_cost_detail())
+            df.loc[:, "revenue"] = self.number_of_buy * 45
+
+            print(tabulate(df, headers='keys', tablefmt='psql'))
+
+
+    marketing_report = MarketingCampaignResult(5, 3)
+    marketing_report.display_report()
+  </code>
+
+  In the previous implementation, the module mix the way the values of the report are computed, which is a
+  responsability that can be attributed for example to finance or accounting and the way the report is presented, which
+  can be for example the responsability of marketing to show the good results of their marketing campaing to the CEO.
+
+  A good implementation would be to separate the two "responsability" in different module.
+
+
+  <code class="language-python">
+
+# Good implementation - Separation in two modules
+
+
+# Will be used by finance
+@dataclass
+class MarketingCampaignCost:
+    number_of_publicity: int
+
+    def total_cost(self) -> int:
+        return self.number_of_publicity * 99
+
+    def get_cost_detail(self) -> Dict[str, int]:
+        total_cost = self.total_cost()
+        cost_detail = {
+            "creation_cost": [total_cost * 0.25],
+            "provider_cost": [total_cost * 0.55],
+            "human_ressource_cost": [total_cost * 0.2]
+        }
+        return cost_detail
+
+
+# Will be used by Marketing
+@dataclass
+class MarketingCampaignEfficiency:
+    cost_detail: Dict
+    number_of_buy: int
+
+    def display_report(self) -> float:
+        df = pd.DataFrame.from_dict(self.cost_detail)
+        df.loc[:, "revenue"] = self.number_of_buy * 45
+
+        print(tabulate(df, headers='keys', tablefmt='psql'))
+
+
+marketing_cost = MarketingCampaignCost(5)
+cost_detail = marketing_cost.get_cost_detail()
+
+marketing_report = MarketingCampaignEfficiency(cost_detail, 3)
+marketing_report.display_report()
+
+
+  </code>
+
+  <h3> References </h3>
+
+  <ul>
+    <li>https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html</li>
+
+    <li>"Clean Architecture: A Craftsman's Guide to Software Structure and Design" by Robert Martin</li>
+
+
+  </ul>
+
+
+
+
+</body>
+
+</html>
