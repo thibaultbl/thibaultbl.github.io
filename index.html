@@ -1,33 +1,33 @@
 ---
 layout: page
 title: DataIdea
-subtitle: Data-Scientist path & progress
+subtitle: This blog is of no interest to anyone except the one writing it.
 use-site-title: true
 ---
 
 <head>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111854627-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111854627-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-  gtag('config', 'UA-111854627-1');
-</script>
+    gtag('config', 'UA-111854627-1');
+  </script>
 </head>
 
 <div class="posts-list">
   {% for post in paginator.posts %}
   <article class="post-preview">
     <a href="{{ post.url | prepend: site.baseurl }}">
-	  <h2 class="post-title">{{ post.title }}</h2>
+      <h2 class="post-title">{{ post.title }}</h2>
 
-	  {% if post.subtitle %}
-	  <h3 class="post-subtitle">
-	    {{ post.subtitle }}
-	  </h3>
-	  {% endif %}
+      {% if post.subtitle %}
+      <h3 class="post-subtitle">
+        {{ post.subtitle }}
+      </h3>
+      {% endif %}
     </a>
 
     <p class="post-meta">
@@ -42,12 +42,12 @@ use-site-title: true
       <a href="{{ site.baseurl }}/tag/{{ tag }}">{{ tag }}</a>
       {% endfor %}
       {% else %}
-        {{ post.tags | join: ", " }}
+      {{ post.tags | join: ", " }}
       {% endif %}
     </div>
     {% endif %}
 
-   </article>
+  </article>
   {% endfor %}
 </div>
 
