@@ -47,10 +47,6 @@ use-site-title: true
 
   <h3> Code example </h3>
 
-  In the example below, we start with an implementation of a module used to compute the result of a marketing campaign.
-
-  The problem is that
-
   <code class="language-python">
     from dataclasses import dataclass
     from typing import Dict
@@ -72,63 +68,79 @@ use-site-title: true
         def get_cost_detail(self) -> Dict[str, int]:
             total_cost = self.total_cost()
             cost_detail = {
-                "creation": [total_cost * 0.25],
-                "provider": [total_cost * 0.55],
-                "human_ressource": [total_cost * 0.2]
+                "creation_cost": [total_cost * 0.25],
+                "provider_cost": [total_cost * 0.55],
+                "human_ressource_cost": [total_cost * 0.2]
             }
             return cost_detail
 
         # Will be used to display the report - used by marketing
         def display_report(self) -> float:
             df = pd.DataFrame.from_dict(self.get_cost_detail())
+            df.loc[:, "revenue"] = self.number_of_buy * 45
 
             print(tabulate(df, headers='keys', tablefmt='psql'))
 
 
     marketing_report = MarketingCampaignResult(5, 3)
     marketing_report.display_report()
+  </code>
 
-    # Good implementation - Separation in two modules
+  In the previous implementation, the module mix the way the values of the report are computed, which is a
+  responsability that can be attributed for example to finance or accounting and the way the report is presented, which
+  can be for example the responsability of marketing to show the good results of their marketing campaing to the CEO.
 
-
-    # Will be used by finance
-    @dataclass
-    class MarketingCampaignCost:
-        number_of_publicity: int
-        number_of_buy: int
-
-        def total_cost(self) -> int:
-            return self.number_of_publicity * 99
-
-        def get_cost_detail(self) -> Dict[str, int]:
-            total_cost = self.total_cost()
-            cost_detail = {
-                "creation": [total_cost * 0.25],
-                "provider": [total_cost * 0.55],
-                "human_ressource": [total_cost * 0.2]
-            }
-            return cost_detail
+  A good implementation would be to separate the two "responsability" in different module.
 
 
-    # Will be used by Marketing
-    @dataclass
-    class MarketingCampaignEfficiency:
-        cost_detail: Dict
+  <code class="language-python">
 
-        def display_report(self) -> float:
-            df = pd.DataFrame.from_dict(self.cost_detail)
-
-            print(tabulate(df, headers='keys', tablefmt='psql'))
+# Good implementation - Separation in two modules
 
 
-    marketing_cost = MarketingCampaignCost(5, 3)
-    cost_detail = marketing_cost.get_cost_detail()
+# Will be used by finance
+@dataclass
+class MarketingCampaignCost:
+    number_of_publicity: int
 
-    marketing_report = MarketingCampaignEfficiency(cost_detail)
-    marketing_report.display_report()
+    def total_cost(self) -> int:
+        return self.number_of_publicity * 99
+
+    def get_cost_detail(self) -> Dict[str, int]:
+        total_cost = self.total_cost()
+        cost_detail = {
+            "creation_cost": [total_cost * 0.25],
+            "provider_cost": [total_cost * 0.55],
+            "human_ressource_cost": [total_cost * 0.2]
+        }
+        return cost_detail
+
+
+# Will be used by Marketing
+@dataclass
+class MarketingCampaignEfficiency:
+    cost_detail: Dict
+    number_of_buy: int
+
+    def display_report(self) -> float:
+        df = pd.DataFrame.from_dict(self.cost_detail)
+        df.loc[:, "revenue"] = self.number_of_buy * 45
+
+        print(tabulate(df, headers='keys', tablefmt='psql'))
+
+
+marketing_cost = MarketingCampaignCost(5)
+cost_detail = marketing_cost.get_cost_detail()
+
+marketing_report = MarketingCampaignEfficiency(cost_detail, 3)
+marketing_report.display_report()
 
 
   </code>
+
+  <h3> References </h3>
+
+  https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html
 
 
 
