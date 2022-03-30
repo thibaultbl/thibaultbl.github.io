@@ -76,13 +76,13 @@ use-site-title: true
             pass
     
     
-    class BigDog:
+    class BigDog(Dog):
     
         def bark(self):
             print("WOF WOF")
     
     
-    class SmallDog:
+    class SmallDog(Dog):
     
         def bark(self):
             print("wof wof")
@@ -91,7 +91,7 @@ use-site-title: true
     # If the user want to add a medium dog, it is easy
     
     
-    class MediumDog:
+    class MediumDog(Dog):
     
         def bark(self):
             print("wof WOF")

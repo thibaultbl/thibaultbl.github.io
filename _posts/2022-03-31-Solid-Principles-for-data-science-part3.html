@@ -1,0 +1,120 @@
+---
+layout: page
+title: SOLID principles for data science
+subtitle: Part 3 - Liskov substitution principle
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="../css/prism.css">
+  <script src="../js/prism.js"></script>
+</head>
+
+<body>
+
+
+  <h3> Liskov substitution principle </h3>
+
+  <p>
+    This principle is based on the principle of substitutability between a parent class and child class. When you use
+    inheritance, an external object should be able to use a class or a subclass without knowing about it. It means that
+    the implementation of a subclass should be compatible with the use of the parent class (it should not break the use
+    for an external object).
+  </p>
+
+  <h3> Code example </h3>
+
+  <figure>
+    <figcaption>Bad implementation</figcaption>
+    <pre>
+  <code class="language-python">
+    from dataclasses import dataclass
+    from abc import abstractmethod
+    
+    
+    # Bad implementation
+    class BigDog():
+    
+        def bark(self):
+            print("WOF WOF")
+    
+    
+    @dataclass
+    class BigDogWithVoiceLoss(BigDog):
+        voice_loss: bool = False
+    
+        def bark(self) -> str:
+            if self.voice_loss:
+                return "wof wof"
+            else:
+                return "WOF WOF"
+    
+        def bark_print(self):
+            print(self.bark())
+    
+    
+    for dog in [BigDog(), BigDogWithVoiceLoss(voice_loss=True)]:
+        dog.bark()
+  </code>
+</pre>
+  </figure>
+
+  In the previous implementation, the function bark print something and return None for BigDog, but the bark function
+  for BigDogWithVoiceLoss return a string and print nothing. Therefor, BigDogWithVoiceLoss cannot be used as a BigDog
+  even when BigDog is his parent close, thus violating the Liskov substitution principle.
+
+  This principle applies to function (parameters, return type, ...), attributes of a class ... a child class should
+  never modify function parameters and return type or attributes type that are defined in the parent class.
+
+  <figure>
+    <figcaption>Good Implementation</figcaption>
+    <pre>
+  <code class="language-python">
+
+    
+# Good implementation
+
+
+class BigDog():
+
+    def bark(self):
+        print("WOF WOF")
+
+
+@dataclass
+class BigDogWithVoiceLoss(BigDog):
+    voice_loss: bool = False
+
+    def bark(self):
+        if self.voice_loss:
+            print("wof wof")
+        else:
+            print("WOF WOF")
+
+
+for dog in [BigDog(), BigDogWithVoiceLoss(voice_loss=True)]:
+    dog.bark()
+
+    
+
+  </code>
+</pre>
+  </figure>
+
+  <h3> References </h3>
+
+  <ul>
+    <li>https://en.wikipedia.org/wiki/Liskov_substitution_principle</li>
+
+    <li>"Clean Architecture: A Craftsman's Guide to Software Structure and Design" by Robert Martin</li>
+
+
+  </ul>
+
+
+</body>
+
+</html>
