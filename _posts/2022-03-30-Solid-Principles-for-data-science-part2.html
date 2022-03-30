@@ -1,0 +1,117 @@
+---
+layout: page
+title: SOLID principles for data science
+subtitle: Part 2 - Open–closed principle
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="../css/prism.css">
+  <script src="../js/prism.js"></script>
+</head>
+
+<body>
+
+
+  <h3> Open–closed principle </h3>
+
+  <p>
+    This principle state <i></i>"software entities (classes, modules, functions, etc.) should be open for extension, but
+    closed
+    for modification"</i> </br>
+    It means that when you think about the architecture of your program, you have to think about a way to make it easy
+    for any developer to add different functionality by just adding code without having to modify (remove or modify) the
+    existing code.
+  </p>
+
+  <h3> Code example </h3>
+
+  <figure>
+    <figcaption>Bad implementation</figcaption>
+    <pre>
+  <code class="language-python">
+    from dataclasses import dataclass
+    from abc import abstractmethod
+
+
+    # Bad implementation
+    class Dog:
+        size: str
+
+        def bark(self):
+            if self.size == "big":
+                print("WOF WOF")
+                return
+
+            if self.size == "small":
+                print("wof wof")
+                return
+
+            if self.size == "medium":
+                print("wof WOF")
+                return
+  </code>
+</pre>
+  </figure>
+
+  In the previous implementation, if the user want to add a medium dog, he has to modify an existing method.
+
+  In the following version, the user doesn't have to modify existing code. Like you can see here, a good way to
+  implement the the open-close
+  principle is to use abstract interface.
+
+  <figure>
+    <figcaption>Good Implementation</figcaption>
+    <pre>
+  <code class="language-python">
+
+    # Good implementation
+    class Dog:
+    
+        @abstractmethod
+        def bark(self):
+            pass
+    
+    
+    class BigDog:
+    
+        def bark(self):
+            print("WOF WOF")
+    
+    
+    class SmallDog:
+    
+        def bark(self):
+            print("wof wof")
+    
+    
+    # If the user want to add a medium dog, it is easy
+    
+    
+    class MediumDog:
+    
+        def bark(self):
+            print("wof WOF")
+    
+
+  </code>
+</pre>
+  </figure>
+
+  <h3> References </h3>
+
+  <ul>
+    <li>https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle</li>
+
+    <li>"Clean Architecture: A Craftsman's Guide to Software Structure and Design" by Robert Martin</li>
+
+
+  </ul>
+
+
+</body>
+
+</html>
