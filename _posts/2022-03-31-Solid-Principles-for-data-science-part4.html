@@ -1,0 +1,94 @@
+---
+layout: page
+title: SOLID principles for data science
+subtitle: Part 4 - Interface segregation principle
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="../css/prism.css">
+  <script src="../js/prism.js"></script>
+</head>
+
+<body>
+
+
+  <h3> Interface segregation principle </h3>
+
+  <p>
+    This principle state that no code should be forced to depend on methods it does not use. It means that if you want
+    to apply ISP, you should split large interfaces into smaller and more specific ones so that object can use only
+    interface they are interested about. It is one of the principle that is more and more used with the rise of
+    microservices architectures.
+  </p>
+
+  <h3> Code example </h3>
+
+  <figure>
+    <figcaption>Bad implementation</figcaption>
+    <pre>
+  <code class="language-python">
+from dataclasses import dataclass
+from abc import abstractmethod
+
+
+# Bad implementation
+@dataclass
+class Atm():
+    amount: float
+
+    @abstractmethod
+    def deposit(self, amount_deposed: float):
+        pass
+
+    @abstractmethod
+    def withdrawal(self, amount_withdrawed: float) -> float:
+        pass
+
+
+class AtmBankOne(Atm):
+
+    def deposit(self, amount_deposed: float):
+        print(f"{amount_deposed} have been deposed on your bank one account")
+        self.amount += amount_deposed
+
+    def withdrawal(self, amount_withdrawed: float) -> float:
+        print(f"{amount_withdrawed} have been withdrawed of your bank one account")
+        self.amount += amount_withdrawed
+
+
+class AtmBlockedAccount(Atm):
+    """ATM only for deposit
+
+    Args:
+        Atm (_type_): Atm interface.
+    """
+
+    def deposit(self, amount_deposed: float):
+        print(f"{amount_deposed} have been deposed on your blocked account")
+        self.amount += amount_deposed
+
+
+    
+
+  </code>
+</pre>
+  </figure>
+
+  <h3> References </h3>
+
+  <ul>
+    <li>https://en.wikipedia.org/wiki/Interface_segregation_principle</li>
+
+    <li>"Clean Architecture: A Craftsman's Guide to Software Structure and Design" by Robert Martin</li>
+
+
+  </ul>
+
+
+</body>
+
+</html>
