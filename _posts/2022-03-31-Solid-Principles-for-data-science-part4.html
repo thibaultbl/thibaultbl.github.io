@@ -78,6 +78,61 @@ class AtmBlockedAccount(Atm):
 </pre>
   </figure>
 
+  <figure>
+    <figcaption>Good implementation</figcaption>
+    <pre>
+  <code class="language-python">
+
+    # Good implementation
+
+
+    @dataclass
+    class Atm():
+        amount: float
+    
+    
+    @dataclass
+    class AtmDeposit(Atm):
+    
+        @abstractmethod
+        def deposit(self, amount_deposed: float):
+            pass
+    
+    
+    @dataclass
+    class AtmWithdrawal(Atm):
+    
+        @abstractmethod
+        def withdrawal(self, amount_withdrawed: float) -> float:
+            pass
+    
+    
+    class AtmBankOne(AtmDeposit, AtmWithdrawal):
+    
+        def deposit(self, amount_deposed: float):
+            print(f"{amount_deposed} have been deposed on your bank one account")
+            self.amount += amount_deposed
+    
+        def withdrawal(self, amount_withdrawed: float) -> float:
+            print(f"{amount_withdrawed} have been withdrawed of your bank one account")
+            self.amount += amount_withdrawed
+    
+    
+    class AtmBlockedAccount(AtmDeposit):
+        """ATM only for deposit
+    
+        Args:
+            Atm (_type_): Atm interface.
+        """
+    
+        def deposit(self, amount_deposed: float):
+            print(f"{amount_deposed} have been deposed on your blocked account")
+            self.amount += amount_deposed
+
+  </code>
+</pre>
+  </figure>
+
   <h3> References </h3>
 
   <ul>
