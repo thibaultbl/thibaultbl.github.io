@@ -1,0 +1,158 @@
+---
+layout: page
+title: SOLID principles for data science
+subtitle: Part 5 - dependency inversion principle
+use-site-title: true
+---
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="../css/prism.css">
+  <script src="../js/prism.js"></script>
+</head>
+
+<body>
+
+
+  <h3> Dependency inversion principle </h3>
+
+  <p>
+    This principle mainly state that:
+
+  <ul>
+    <li>High-level modules should not depend on low-level modules. Both should depend on abstractions.</li>
+
+    <li>Abstractions should not depend on details. Details should depend on abstractions.</li>
+
+  </ul>
+
+  A module could be a function, a class, a file or any piece of code. In practise, it means that most of the time, you
+  should not create object within module (i.e. class function), but you should make those module depends on interface.
+  Like demonstrated in the example below, you should avoid using if statement for object creation and replace them with
+  dependencies on interfaces.
+
+  </p>
+
+  <h3> Code example </h3>
+
+  <figure>
+    <figcaption>Bad implementation</figcaption>
+    <pre>
+  <code class="language-python">
+    from dataclasses import dataclass
+    from abc import abstractmethod
+    from typing import List
+    
+    
+    # Bad implementation
+    @dataclass
+    class Dog():
+        size: str
+    
+        @abstractmethod
+        def bark(self):
+            pass
+    
+    
+    @dataclass
+    class BigDog(Dog):
+        size: str = "big"
+    
+        @abstractmethod
+        def bark(self):
+            print("WOF WOF")
+    
+    
+    @dataclass
+    class SmallDog(Dog):
+        size: str = "small"
+    
+        @abstractmethod
+        def bark(self):
+            print("wof wof")
+    
+    
+    def barks(size_of_dog: str):
+        if size_of_dog == "small":
+            dog = SmallDog()
+            dog.bark()
+        elif size_of_dog == "big":
+            dog = BigDog()
+            dog.bark()
+        else:
+            raise NotImplementedError
+    
+    
+    barks("big")
+  </code>
+</pre>
+  </figure>
+
+  The example above is bad because the object is created within the function and you add an useless if/else statement
+  that will be harder to maintain (more difficult to handle bug, more difficult to add new object, ...).
+
+  It is way more simple / maintenable to make your function depends on an external object and to make this object not a
+  concretion but an abstraction / an interface.
+
+  <figure>
+    <figcaption>Good implementation</figcaption>
+    <pre>
+  <code class="language-python">
+
+    # Good implementation
+
+
+    @dataclass
+    class Dog():
+        size: str
+    
+        @abstractmethod
+        def bark(self):
+            pass
+    
+    
+    @dataclass
+    class BigDog(Dog):
+        size: str = "big"
+    
+        @abstractmethod
+        def bark(self):
+            print("WOF WOF")
+    
+    
+    @dataclass
+    class SmallDog(Dog):
+        size: str = "small"
+    
+        @abstractmethod
+        def bark(self):
+            print("wof wof")
+    
+    
+    def barks(dog: Dog):
+        dog.bark()
+    
+    
+    barks(BigDog())
+
+  </code>
+</pre>
+  </figure>
+
+  <h3> References </h3>
+
+  <ul>
+    <li>https://en.wikipedia.org/wiki/Dependency_inversion_principle</li>
+
+    <li>"Clean Architecture: A Craftsman's Guide to Software Structure and Design" by Robert Martin</li>
+    <li>https://stackoverflow.com/questions/61358683/dependency-inversion-in-python</li>
+
+
+  </ul>
+
+
+</body>
+
+</html>
