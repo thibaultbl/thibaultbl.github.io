@@ -19,7 +19,8 @@ use-site-title: true
   <h3> Dependency inversion principle </h3>
 
   <p>
-    This principle mainly state that:
+    This principle mainly state that, a module should "Depend upon abstractions, [not] concretions.", and
+    more precisely:
 
   <ul>
     <li>High-level modules should not depend on low-level modules. Both should depend on abstractions.</li>
@@ -28,9 +29,12 @@ use-site-title: true
 
   </ul>
 
-  A module could be a function, a class, a file or any piece of code. In practise, it means that most of the time, you
-  should not create object within module (i.e. class function), but you should make those module depends on interface.
-  Like demonstrated in the example below, you should avoid using if statement for object creation and replace them with
+  A module could be a function, a class, a file or any piece of code. In practise, it means that most of the time,
+  you
+  should not create object within module (i.e. class function), but you should make those module depends on
+  interface.
+  Like demonstrated in the example below, you should avoid using if statement for object creation and replace them
+  with
   dependencies on interfaces.
 
   </p>
@@ -140,6 +144,14 @@ use-site-title: true
   </code>
 </pre>
   </figure>
+
+  Now, the barks function depends ont he interface and not the object concretion. the function barks may use any Dog
+  object and we are sur that every Dog object will have a bark method, because of the interface.
+
+  Why do we call this principle the "dependency inversion principle" , because now, the dependency goes to the client.
+  The client (i.e. the barks function) is the one that want to produce the barks sound. The client is some piece of code
+  that is going to use bark function. The client doesn't know exactly what is going to barks(), but know that the object
+  will have a bark() method.
 
   <h3> References </h3>
 
